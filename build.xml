@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="trixx" default="mvn-install" basedir=".">
+  <property name="mvn.deps.file" value="trixx-services-deps-0.1.zip" />
+  <property name="mvn.deps.url" value="http://cloud.github.com/downloads/aaronfeng/trixx-services/${mvn.deps.file}" />
+
+  <property name="mvn.install.compojure.jar" value="compojure-0.2.jar" />
+  <property name="mvn.install.clojure-contrib.jar" value="clojure-contrib-1.0.0.jar" />
+
+  <target name="mvn-install" depends="fetch-deps" description="download dependencies">
+    <exec executable="mvn">
+      <arg value="install:install-file" />
+      <arg value="-Dfile=./deps/${mvn.install.clojure-contrib.jar}" />
+      <arg value="-DgroupId=org.clojure" />
+      <arg value="-DartifactId=clojure-contrib" />
+      <arg value="-Dversion=1.0.0" />
+      <arg value="-Dpackaging=jar" />
+    </exec>
+
+    <exec executable="mvn">
+      <arg value="install:install-file" />
+      <arg value="-Dfile=./deps/${mvn.install.compojure.jar}" />
+      <arg value="-DgroupId=compojure" />
+      <arg value="-DartifactId=compojure" />
+      <arg value="-Dversion=0.2" />
+      <arg value="-Dpackaging=jar" />
+    </exec>
+  </target>
+
+  <target name="fetch-deps" description="download dependencies">
+    <get usetimestamp="true" description="Trixx dependencies." src="${mvn.deps.url}" dest="${mvn.deps.file}" />
+    <unzip src="${mvn.deps.file}" dest="." />
+  </target>
+</project>
