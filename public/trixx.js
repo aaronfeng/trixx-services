@@ -94,7 +94,7 @@ TRIXX.Views.Queue.render = function (queues) {
                  +       label
                  +  '  </div>';
         }
-        html += '</div><br/>';
+        html += '</div><br clear="all"/>';
         return html;
     };
 
