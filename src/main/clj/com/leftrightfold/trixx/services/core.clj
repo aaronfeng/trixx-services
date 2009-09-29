@@ -42,6 +42,24 @@
   (if (valid-user name password)
     200 500))
 
+(defn index-page []
+  (html
+    [:html
+     [:head (include-js  "json2.js" "jquery-1.3.2.min.js" "trixx.js")
+            (include-css "styles.css")]
+     [:body 
+      [:img {:src "trixx-rabbit.png"}]
+      [:div {:id "header"}]
+      [:div {:id "content"}
+        [:div {:id "status"}]
+        [:div {:id "vhost"}]
+        [:div {:id "queue"}]
+        [:div {:id "exchange"}]
+        [:div {:id "user"}]]
+      [:div {:id "footer"}]
+     ]
+    ]))
+
 (defroutes webservice
   (GET "/exchanges"
     (get-exchanges "/"))
@@ -126,5 +144,7 @@
     (verify-login (params :name)
                   (params :password)))
 
-  (ANY "*" 
-    [404 "Page not found"]))
+  (GET "/*"
+    (or (serve-file (params :*)) :next)) 
+
+  (ANY "*" (index-page)))
