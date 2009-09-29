@@ -246,9 +246,10 @@ TRIXX.Views.Queue.refresh = function (queues) {
 
 // TODO: Fix this, not clearing interval
 TRIXX.Views.refresh = function () {
-    var queueRefreshIntervalId; 
+    var queueRefreshIntervalId, pollInterval = 1; 
+
     try {
-        queueRefreshIntervalId = setInterval('TRIXX.Data.find("queues", null, function () { return $("option:selected").val(); }, TRIXX.Views.Queue.refresh)', 4000);
+        queueRefreshIntervalId = setInterval('TRIXX.Data.find("queues", null, function () { return $("option:selected").val(); }, TRIXX.Views.Queue.refresh)', pollInterval * 1000);
     } catch (e) {
         console.log("[TRIXX.Views.refresh] Unable to refresh.  Refresh id=" + queueRefreshIntervalId);
         clearInterval(queueRefreshIntervalId);
