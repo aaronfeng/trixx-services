@@ -15,6 +15,10 @@ TRIXX.Views.Vhost = {};
 TRIXX.Views.Queue = {};
 TRIXX.Views.Exchange = {};
 
+TRIXX.Utils.removeSpaces = function (str) {
+    return str.split(' ').join("");
+};
+
 //TODO: consider returning JSON in a JSON format, ie runningApplication not running-application
 //
 TRIXX.Utils.formatQueueId = function (queue, postfix)  {
@@ -230,7 +234,7 @@ TRIXX.Views.Queue.refresh = function (queues) {
          {display: "acks-uncommitted", value: "acks-uncommitted"}]).each(function () {
 
           id = TRIXX.Utils.formatQueueId(queue, this.display);
-          before = $("#" + id).text().trim(); 
+          before = TRIXX.Utils.removeSpaces($("#" + id).text()); 
           after = queue[this.value];
 
           if (before != after) {
