@@ -1,3 +1,4 @@
+/*global escape document setInterval clearInterval $ */
 var console;
 if (typeof console === "undefined") {
     console = { 
@@ -20,7 +21,6 @@ TRIXX.Utils.removeSpaces = function (str) {
 };
 
 //TODO: consider returning JSON in a JSON format, ie runningApplication not running-application
-//
 TRIXX.Utils.formatQueueId = function (queue, postfix)  {
     // this needs to handle other chars other than dot
     return queue.name.replace(/[.]/g, "-") + "-" + postfix;
@@ -29,16 +29,15 @@ TRIXX.Utils.formatQueueId = function (queue, postfix)  {
 TRIXX.Utils.encode = function (str) {
     var escaped; 
 
-    if (str == null || str == "") {
-      return "";
-    };
-
+    if (str === null || str === "") {
+        return "";
+    }
     escaped = escape(str);
-    return escaped.replace(/[/]/g, "&#47").replace(/[+]/g,"&#43");
+    return escaped.replace(/[\/]/g, "&#47").replace(/[+]/g, "&#43");
 };
 
 TRIXX.Utils.removeTrailingSlash = function (str) {
-    if (str && str[str.length - 1] == "/") {
+    if (str && str[str.length - 1] === "/") {
         return TRIXX.Utils.removeTrailingSlash(str.slice(0, str.length - 1));
     }
     return str;
@@ -50,33 +49,42 @@ TRIXX.Utils.constructGetUrl = function (resource, action, vhost) {
     encodedAction   = TRIXX.Utils.encode(action);
     encodedVhost    = TRIXX.Utils.encode(vhost);
 
-    // TODO: Fix double slashes when there is no action but vhost. The url is still working.
+    if (encodedAction === "") {
+        return TRIXX.Utils.removeTrailingSlash("/" + encodedResource + "/" + encodedVhost);
+    }
+
     return TRIXX.Utils.removeTrailingSlash("/" + encodedResource + "/" + encodedAction + "/" + encodedVhost);
 };
 
 TRIXX.Data.find = function (resource, action, findVhostFn, successFn, errorFn) {
-    var url = TRIXX.Utils.constructGetUrl(resource, action, findVhostFn == null ? null : findVhostFn());
+    var url = TRIXX.Utils.constructGetUrl(resource, action, findVhostFn === null ? null : findVhostFn());
     console.log('[TRIXX.Data.find] url="' + url + '"');
 
     $.ajax({
-        url:     url,
-        type:    "GET",
-        success: function (data) { successFn(JSON.parse(data)); }, 
-        error:   errorFn   || function () { console.log('[TRIXX.Data.find] ooops, failed to retrieve="' + resource + '"'); },
-    });
+        url: url,
+        type: "GET",
+        success: 
+        function (data) { 
+            successFn(JSON.parse(data)); 
+        }, 
+        error: 
+            errorFn || function () { 
+                console.log('[TRIXX.Data.find] ooops, failed to retrieve="' + resource + '"'); 
+            }
+        });
 };
 
 TRIXX.Views.Queue.render = function (queues) {
-    var fourColumnTemplate, durableHtml, autoDeleteHtml, html = "";
+    var fourColumnTemplate, columnTemplate, columnLastTemplate, durableHtml, autoDeleteHtml, html = "";
 
     $(".queue").remove();
 
     durableHtml = function (queue) {
-        return queue.durable == "true" ? '<div class="queue-status">durable</div>' : "";
+        return queue.durable === "true" ? '<div class="queue-status">durable</div>' : "";
     };
 
     autoDeleteHtml = function (queue) {
-        return queue.durable == "true" ? '<div class="queue-status">auto delete</div>' : "";
+        return queue.durable === "true" ? '<div class="queue-status">auto delete</div>' : "";
     };
 
     fourColumnTemplate = function (title, columns) {
@@ -84,49 +92,55 @@ TRIXX.Views.Queue.render = function (queues) {
     };
 
     columnLastTemplate = function (queue, label, value) {
-        html = '<div class="column lastcolumn">';  
+        var html = '<div class="column lastcolumn">';  
 
-        if (label != "" || value != "") {
-            html += '  <div class="verticalcenter">'
-                 +  '    <strong id="' + TRIXX.Utils.formatQueueId(queue, label)  + '" class="med">'
-                 +         value
-                 +  '    </strong>'
-                 +       label
-                 +  '  </div>';
+        if (label !== "" || value !== "") {
+            html += [
+                '<div class="verticalcenter">',
+                '  <strong id="' + TRIXX.Utils.formatQueueId(queue, label)  + '" class="med">',
+                value,
+                '  </strong>',
+                label,
+                '</div>'
+            ].join('');   
         }
         html += '</div><br clear="all"/>';
         return html;
     };
 
     columnTemplate = function (queue, label, value) {
-        return  '<div class="column">'
-             +  '  <div class="verticalcenter">'
-             +  '    <strong id="' + TRIXX.Utils.formatQueueId(queue, label) + '" class="med">'
-             +         value
-             +  '    </strong>'
-             +       label
-             +  '  </div>'
-             +  '</div>';
+        return [
+            '<div class="column">',
+            '  <div class="verticalcenter">',
+            '    <strong id="' + TRIXX.Utils.formatQueueId(queue, label) + '" class="med">',
+            value,
+            '    </strong>',
+            label,
+            '  </div>',
+            '</div>'
+        ].join('');
     };
 
     $.each(queues, function () {
-        html += '<div class="queue">'
-             +    '<h2>' + this.name + '</h2>'
-             +    durableHtml(this)
-             +    autoDeleteHtml(this)
-             +    fourColumnTemplate("<h3>Status</h3>",
-                      columnTemplate(this, "consumers",          this.consumers)
-             +        columnTemplate(this, "transactions",       this.transactions)
-                      // convert memory to human size
-             +        columnTemplate(this, "memory",             this.memory)
-             +        columnLastTemplate(this, "acks-uncommitted",this["acks-uncommitted"]))
-             +    fourColumnTemplate("<h3>Messages</h3>",
-                      // show numbers with delimiter
-                      columnTemplate(this,     "total",          this.messages)
-             +        columnTemplate(this,     "ready",          this["messages-ready"])
-             +        columnTemplate(this,     "unacknowledged", this["messages-unacknowledged"])
-             +        columnLastTemplate(this, "uncommitted",    this["messages-uncommitted"])) 
-             +  '</div>';
+        html += [
+                '<div class="queue">',
+                '<h2>' + this.name + '</h2>',
+                durableHtml(this),
+                autoDeleteHtml(this),
+                fourColumnTemplate("<h3>Status</h3>",
+                    columnTemplate(this, "consumers", this.consumers) +
+                    columnTemplate(this, "transactions", this.transactions) +
+                    // convert memory to human size
+                    columnTemplate(this, "memory", this.memory) +
+                    columnLastTemplate(this, "acks-uncommitted", this["acks-uncommitted"])) +
+                fourColumnTemplate("<h3>Messages</h3>",
+                    // show numbers with delimiter
+                    columnTemplate(this, "total", this.messages) + 
+                    columnTemplate(this, "ready", this["messages-ready"]) +
+                    columnTemplate(this, "unacknowledged", this["messages-unacknowledged"]) +
+                    columnLastTemplate(this, "uncommitted", this["messages-uncommitted"])),
+                '</div>'
+            ].join('');
     });
 
     $('#vhost').append(html);
@@ -136,8 +150,13 @@ TRIXX.Views.Vhost.render = function (vhosts) {
     var vhostDropdown, onVhostSelect, firstVhost;
 
     onVhostSelect = function (vhost) {
+        $("#queue").remove();
         console.log(vhost + " is selected");
-        TRIXX.Data.find("queues", null, function () { return vhost }, TRIXX.Views.Queue.render);
+        TRIXX.Data.find("queues", null, 
+            function () { 
+                return vhost; 
+            }, 
+        TRIXX.Views.Queue.render);
     };
 
     vhostDropdown = (function () {
@@ -147,9 +166,13 @@ TRIXX.Views.Vhost.render = function (vhosts) {
 
         vhostEl.append(selectEl);
 
-        selectEl.change(function () { onVhostSelect($(this).val()); });
+        selectEl.change(function () { 
+            onVhostSelect($(this).val()); 
+        });
 
-        vhostSorter = function (a, b) { return a.name < b.name ? -1 : 1 }
+        vhostSorter = function (a, b) { 
+            return a.name < b.name ? -1 : 1; 
+        };
 
         $.each(vhosts.sort(vhostSorter), function () {
             var vhost = this.name;
@@ -160,7 +183,6 @@ TRIXX.Views.Vhost.render = function (vhosts) {
     }());
     
     firstVhost = (vhosts && vhosts.length > 0) ? vhosts[0].name : null; 
-    //$('#queue').append('<h2>Queues</h2>');
     onVhostSelect(firstVhost);
 };
 
@@ -181,12 +203,14 @@ TRIXX.Views.Status.render = function (status) {
     };
 
     formatRunningNodes = function (node, runningOrStopped) {
-        return '<div class="node">'                       
-             + '  <div class="status ' + runningOrStopped + '">'
-             +     runningOrStopped
-             + '  </div>' 
-             +    node
-             + '</div>';    
+        return [
+            '<div class="node">',
+            '  <div class="status ' + runningOrStopped + '">',
+            runningOrStopped,
+            '  </div>',
+            node,
+            '</div>'
+        ].join('');
     };
 
     runningNodes = function () {
@@ -206,50 +230,60 @@ TRIXX.Views.Status.render = function (status) {
         return output;
     };
 
-    $("#status").append('<div id="services">'           
-                +       '  <b>Running Services</b><br/>'
-                +          runningApplications()        
-                +       '</div>');
+    $("#status").append('<div id="services">' +
+                        '  <b>Running Services</b><br/>' +
+                        runningApplications() +
+                        '</div>');
 
-    $("#status").append('<div id="nodes">'
-                +       '  <h1>Nodes</h1>' 
-                +          runningNodes()   
-                +       '</div>');
+    $("#status").append('<div id="nodes">' +
+                        '  <h1>Nodes</h1>' +
+                        runningNodes() +
+                        '</div>');
 };
 
 // TODO: check queue count to add or remove
 TRIXX.Views.Queue.refresh = function (queues) {
-  var id, before, after, queue;
-  $.each(queues, function () {
-      queue = this;
-      console.log("[TRIXX.Views.Queue.refresh] Queue=" + queue.name);
+    var id, before, after, queue;
+    $.each(queues, function () {
+        queue = this;
+        console.log("[TRIXX.Views.Queue.refresh] Queue=" + queue.name);
 
-      $([{display: "consumers"       , value: "consumers"}, 
-         {display: "transactions"    , value: "transactions"}, 
-         {display: "memory"          , value: "memory"}, 
-         {display: "total"           , value: "messages"},
-         {display: "ready"           , value: "messages-ready"}, 
-         {display: "unacknowledged"  , value: "messages-unacknowledged"},
-         {display: "uncommitted"     , value: "messages-uncommitted"},
-         {display: "acks-uncommitted", value: "acks-uncommitted"}]).each(function () {
+        $([{display: "consumers", value: "consumers"}, 
+           {display: "transactions", value: "transactions"}, 
+           {display: "memory", value: "memory"}, 
+           {display: "total", value: "messages"},
+           {display: "ready", value: "messages-ready"}, 
+           {display: "unacknowledged", value: "messages-unacknowledged"},
+           {display: "uncommitted", value: "messages-uncommitted"},
+           {display: "acks-uncommitted", value: "acks-uncommitted"}]).each(function () {
 
-          id = TRIXX.Utils.formatQueueId(queue, this.display);
-          before = TRIXX.Utils.removeSpaces($("#" + id).text()); 
-          after = queue[this.value];
+            id = TRIXX.Utils.formatQueueId(queue, this.display);
+            before = TRIXX.Utils.removeSpaces($("#" + id).text()); 
+            after = queue[this.value];
 
-          if (before != after) {
-              $("#" + id).text(after + "   ");
-          }
-      });
-  });
+            if (before !== after) {
+                $("#" + id).text(after + "   ");
+            }
+        });
+    });
 };
 
 // TODO: Fix this, not clearing interval
 TRIXX.Views.refresh = function () {
-    var queueRefreshIntervalId, pollInterval = 1; 
+    var queueRefreshIntervalId, refreshQueue, pollInterval = 2; 
+
+    refreshQueue = function () {
+        TRIXX.Data.find(
+            "queues", 
+            null, 
+            function () { 
+                return $("option:selected").val(); 
+            }, 
+            TRIXX.Views.Queue.refresh);
+    }; 
 
     try {
-        queueRefreshIntervalId = setInterval('TRIXX.Data.find("queues", null, function () { return $("option:selected").val(); }, TRIXX.Views.Queue.refresh)', pollInterval * 1000);
+        queueRefreshIntervalId = setInterval(refreshQueue, pollInterval * 1000);
     } catch (e) {
         console.log("[TRIXX.Views.refresh] Unable to refresh.  Refresh id=" + queueRefreshIntervalId);
         clearInterval(queueRefreshIntervalId);
