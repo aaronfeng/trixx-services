@@ -157,7 +157,7 @@ h2 {
   color:#050; 
   background-color:#efefef; 
   border: 1px solid #aaa; 
-  cursor: hand;
+  /*cursor: hand;*/
 }
 
 .status {
