@@ -5,6 +5,8 @@
   (:use clojure.contrib.str-utils)
   (:import java.net.URLDecoder))
 
+(defn url-decode [param]
+  (URLDecoder/decode param "UTF-8"))
 
 (defn trim-slash [s] 
   (if (and (> (count s) 1)
@@ -35,7 +37,7 @@
 
 (defn user-delete [name]
   ;;; figure out how to use compojure.http.request.decodeurl
-  (if (delete-user (URLDecoder/decode name "UTF-8"))
+  (if (delete-user name)
     200 500))
 
 (defn verify-login [name password]
@@ -64,36 +66,35 @@
   (GET "/exchanges"
     (get-exchanges "/"))
   (GET "/exchanges/*"
-    (get-exchanges (trim-slash (params :*))))
+    (get-exchanges (trim-slash (url-decode (params :*)))))
 
   (POST "/exchanges"
-    (if (add-exchange (params :vhost)
-                      (params :user)
-                      (params :password)
-                      (params :name)
-                      (params :type)
-                      (Boolean/parseBoolean (params :durable)))
+    (if (add-exchange (url-decode (params :vhost))
+                      (url-decode (params :user))
+                      (url-decode (params :password))
+                      (url-decode (params :name))
+                      (url-decode (params :type))
+                      (Boolean/parseBoolean (url-decode (params :durable))))
       200
       500))
 
   (GET "/queues"
     (get-queues "/"))
   (GET "/queues/*"
-    (get-queues (trim-slash (params :*))))
+    (get-queues (trim-slash (url-decode (params :*)))))
 
   (GET "/bindings"
     (get-bindings "/"))
   (GET "/bindings/*"
-    (get-bindings (trim-slash (params :*))))
+    (get-bindings (trim-slash (url-decode (params :*)))))
 
   (GET "/vhosts"
     (json-str (list-vhosts)))
 
   (POST "/vhosts"
-(prn params)
-        (if (add-vhost (params :name))
-          200
-          500))
+    (if (add-vhost (url-decode (params :name)))
+         200
+         500))
 
   (GET "/connections"
     (json-str (list-connections)))
@@ -102,34 +103,34 @@
     (json-str (list-users)))
 
   (PUT "/users/:user"
-    (set-user-permissions (params :name)
-                          (params :vhost)
-                          (params :config)
-                          (params :write)
-                          (params :read)))
+    (set-user-permissions (url-decode (params :name))
+                          (url-decode (params :vhost))
+                          (url-decode (params :config))
+                          (url-decode (params :write))
+                          (url-decode (params :read))))
 
   (POST "/queues"
-        (if (add-queue (params :vhost)
-                       (params :user)
-                       (params :password)
-                       (params :name)
-                       (Boolean/parseBoolean (params :durable)))
+        (if (add-queue (url-decode (params :vhost))
+                       (url-decode (params :user))
+                       (url-decode (params :password))
+                       (url-decode (params :name))
+                       (Boolean/parseBoolean (url-decode (params :durable))))
           200
           500))
   (POST "/users"
-    (add-user-with-permissions (params :name) 
-                               (params :password)
-                               (params :vhost)
-                               (params :config)
-                               (params :write)
-                               (params :read)))
+    (add-user-with-permissions (url-decode (params :name)) 
+                               (url-decode (params :password))
+                               (url-decode (params :vhost))
+                               (url-decode (params :config))
+                               (url-decode (params :write))
+                               (url-decode (params :read))))
 
   (DELETE "/users/:user"
-    (user-delete (params :user)))
+    (user-delete (url-decode (params :user))))
 
   ;;; needs to handle when user can't be found in trixx
   (GET "/users/:user/permissions"
-    (json-str (list-user-permissions (params :user))))
+    (json-str (list-user-permissions (url-decode (params :user)))))
 
   (GET "/rabbit/status"
     (json-str (status)))
@@ -140,11 +141,11 @@
   (PUT "/rabbit/reset"
     (if (reset) 200 500))
 
-  (POST "/sessions/authenticate"
-    (verify-login (params :name)
-                  (params :password)))
+  (POST "/authenticate"
+    (verify-login (url-decode (params :name))
+                  (url-decode (params :password))))
 
   (GET "/*"
-    (or (serve-file (params :*)) :next)) 
+    (or (serve-file (url-decode (params :*))) :next)) 
 
   (ANY "*" (index-page)))
