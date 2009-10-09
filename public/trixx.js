@@ -84,7 +84,7 @@ TRIXX.Views.Queue.render = function (queues) {
     };
 
     autoDeleteHtml = function (queue) {
-        return queue.durable === "true" ? '<div class="queue-status">auto delete</div>' : "";
+        return queue.autoDelete === "true" ? '<div class="queue-status">auto delete</div>' : "";
     };
 
     fourColumnTemplate = function (title, columns) {
