@@ -169,6 +169,7 @@ TRIXX.Views.Vhost.render = function (vhosts) {
     vhostDropdown = (function () {
         var vhostEl, vhostSorter, selectEl;
         vhostEl = $('#vhost');
+        vhostEl.append("<h3>Virtual Hosts<h3>");
         selectEl = $('<select id="vhosts">');
 
         vhostEl.append(selectEl);
@@ -185,6 +186,7 @@ TRIXX.Views.Vhost.render = function (vhosts) {
             var vhost = this.name;
             selectEl.append('<option value="' + vhost + '">' + vhost + '</option>');
         });
+
         selectEl.wrap('<div id="host-status">');
         selectEl.after('<h3>Queues</h3>');
     }());
