@@ -1,4 +1,4 @@
-/*global escape document setInterval clearInterval $ */
+/*global encodeURIComponent document setInterval clearInterval $ */
 var console;
 if (typeof console === "undefined") {
     console = { 
@@ -27,13 +27,10 @@ TRIXX.Utils.formatQueueId = function (queue, postfix)  {
 };
 
 TRIXX.Utils.encode = function (str) {
-    var escaped; 
-
     if (str === null || str === "") {
         return "";
     }
-    escaped = escape(str);
-    return escaped.replace(/[\/]/g, "&#47").replace(/[+]/g, "&#43");
+    return encodeURIComponent(str);
 };
 
 TRIXX.Utils.removeTrailingSlash = function (str) {
