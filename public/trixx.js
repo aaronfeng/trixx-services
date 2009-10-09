@@ -74,6 +74,15 @@ TRIXX.Data.find = function (resource, action, findVhostFn, successFn, errorFn) {
 TRIXX.Views.Queue.render = function (queues) {
     var fourColumnTemplate, columnTemplate, columnLastTemplate, durableHtml, autoDeleteHtml, html = "";
 
+    queues.sort(function (a, b) {
+        var q1 = a.name, q2 = b.name;
+
+        if (q1 == q2) {
+          return 0;
+        } 
+        return q1 < q2 ? -1 : 1;
+    });
+
     $(".queue").remove();
 
     durableHtml = function (queue) {
