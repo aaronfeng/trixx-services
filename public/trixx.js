@@ -141,6 +141,7 @@ TRIXX.Views.Queue.render = function (queues) {
     });
 
     $('#vhost').append(html);
+
 };
 
 TRIXX.Views.Vhost.render = function (vhosts) {
@@ -263,6 +264,14 @@ TRIXX.Views.Queue.refresh = function (queues) {
             }
         });
     });
+
+    turnConsumerNumbeRedWhenCountZero = (function () {
+        var count;
+        $("strong[id*='-consumers']").each(function (idx, el) {
+            count = $(el).text().replace(/^\s+|\s+$/g,""); 
+            count === "0" ? $(el).css("color", "red") : $(el).css("color", "black");
+        });
+    }());
 };
 
 // TODO: Fix this, not clearing interval
